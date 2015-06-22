@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-shopt -s nullglob
 
 function count_redis_containers() {
-    echo $(docker ps -a | grep vg_redis | wc -l)
+    echo $(docker ps -a | grep "$VG_RUN_PREFIX"_redis_ | wc -l)
 }
 
 function random_string() {
@@ -11,11 +10,7 @@ function random_string() {
 
 case "$1" in
     new)
-        if [ -z "$2" ]; then
-            name=vg_redis_$(count_redis_containers)
-        else
-            name="$2"
-        fi
+        name="$VG_RUN_PREFIX"_redis_$(count_redis_containers)
         password=$(random_string)
         docker run \
             --detach \
@@ -28,16 +23,12 @@ case "$1" in
         exit $VG_VALID_EXIT
         ;;
     rm)
-        docker stop $(docker ps | grep vg_redis | cut  -d' ' -f1) &> /dev/null
-        docker rm $(docker ps -a | grep vg_redis | cut  -d' ' -f1) &> /dev/null
+        docker stop $(docker ps | grep "$VG_RUN_PREFIX"_redis_ | cut  -d' ' -f1) &> /dev/null
+        docker rm $(docker ps -a | grep "$VG_RUN_PREFIX"_redis_ | cut  -d' ' -f1) &> /dev/null
         exit $VG_VALID_EXIT
         ;;
     shell)
-        if [ -z "$2" ]; then
-            source $VG_ENV_FILE
-        else
-            REDIS_URL="$2"
-        fi
+        source $VG_ENV_FILE
         proto="`echo $REDIS_URL | grep '://' | sed -e's,^\(.*://\).*,\1,g'`"
         url=`echo $REDIS_URL | sed -e s,$proto,,g`
         userpass="`echo $url | grep @ | cut -d@ -f1`"
@@ -58,16 +49,14 @@ case "$1" in
             --interactive \
             --tty \
             --net=host \
-            --name=vg_redis_shell \
+            --rm \
             redis redis-cli -h "$host" -p "$port" -a "$pass"
-        docker stop vg_redis_shell &> /dev/null
-        docker rm vg_redis_shell &> /dev/null
         exit $VG_VALID_EXIT
         ;;
     help)
         echo "    redis new - Create a new, redis container"
         echo "    redis rm - Stop and remove *all* redis containers"
-        echo "    redis shell [REDIS_URL] - Open redis-cli pointed at REDIS_URL"
+        echo "    redis shell - Open redis-cli pointed at REDIS_URL"
         ;;
     *)
         exit $VG_NOT_IMPLEMENTED_EXIT
