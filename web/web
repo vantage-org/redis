@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+REDIS_URL=$(vg __env REDIS_URL)
+
+PROTO=$(echo $REDIS_URL | grep '://' | sed -e's,^\(.*://\).*,\1,g')
+URL=$(echo $REDIS_URL | sed -e s,$PROTO,,g)
+
+USER_PASSWORD=$(echo $URL | grep @ | cut -d@ -f1)
+PASSWORD=$(echo $USER_PASSWORD | grep : | cut -d: -f2)
+
+HOST_PORT=`echo $URL | sed -e s,$USER_PASSWORD@,,g | cut -d/ -f1`
+PORT=`echo $HOST_PORT | grep : | cut -d: -f2`
+if [ -n "$PORT" ]; then
+    HOST=`echo $HOST_PORT | grep : | cut -d: -f1`
+else
+    HOST=$HOST_PORT
+fi
+
+IMAGE=$(docker images -q vantage/redis-browser:latest)
+if [ -z "$IMAGE" ]; then
+    DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+    docker build --tag vantage/redis-browser:latest "$DIR"
+fi
+
+docker run \
+    --publish 4567:4567 \
+    --rm \
+    vantage/redis-browser \
+        --bind 0.0.0.0 \
+        --port 4567 \
+        --url "$REDIS_URL"
