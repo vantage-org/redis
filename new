@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+function random_string {
+    head /dev/urandom | tr -dc A-Za-z0-9 | head -c 12
+}
+
+PASSWORD=$(random_string)
+
+CONTAINER=$(docker run \
+    --detach \
+    --publish-all \
+    --label vantage.redis=1 \
+    redis redis-server --requirepass "$PASSWORD")
+
+IP=$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $CONTAINER)
+
+DB="redis://h:$PASSWORD@$IP:6379"
+
+vg __env REDIS_URL "$DB"
+
+echo "$DB"
