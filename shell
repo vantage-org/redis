@@ -17,8 +17,14 @@ else
     HOST=$HOST_PORT
 fi
 
+NETWORK=""
+if [ -n "$VG_DOCKER_NETWORK" ]; then
+    NETWORK="--network=$VG_DOCKER_NETWORK"
+fi
+
 docker run \
     --interactive \
     --tty \
     --rm \
+    "$NETWORK" \
     redis redis-cli -h "$HOST" -p "$PORT" -a "$PASSWORD"

@@ -2,20 +2,32 @@
 set -e
 
 function random_string {
-    head /dev/urandom | LC_ALL=C tr -dc A-Za-z0-9 | head -c 12
+    head /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c 12
 }
 
 PASSWORD=$(random_string)
+CONTAINER_NAME="vg-pg-$(random_string)"
+
+NETWORK=""
+if [ -n "$VG_DOCKER_NETWORK" ]; then
+    NETWORK="--network=$VG_DOCKER_NETWORK"
+fi
 
 CONTAINER=$(docker run \
     --detach \
-    --publish-all \
+    --publish 6379 \
     --label vantage.redis=1 \
+    $NETWORK \
+    --name "$CONTAINER_NAME" \
     redis redis-server --requirepass "$PASSWORD")
 
-IP=$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $CONTAINER)
+if [ -n "$VG_DOCKER_NETWORK" ]; then
+    HOST="$CONTAINER_NAME"
+else
+    HOST=$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $CONTAINER)
+fi
 
-DB="redis://h:$PASSWORD@$IP:6379"
+DB="redis://h:$PASSWORD@$HOST:6379"
 
 vg __env REDIS_URL "$DB"
 
