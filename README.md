@@ -1,2 +1,3 @@
 # redis
-Vantage plugin for redis containers
+
+vantage plugin for redis containers
