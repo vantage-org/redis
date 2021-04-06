@@ -27,7 +27,7 @@ else
     PORT=$(docker inspect --format '{{(index (index .NetworkSettings.Ports "6379/tcp") 0).HostPort}}' "$CONTAINER")
 fi
 
-DB="redis://h:$PASSWORD@$HOST:$PORT"
+DB="redis://default:$PASSWORD@$HOST:$PORT"
 
 $VG_BINARY __env "REDIS_URL=$DB"
 
