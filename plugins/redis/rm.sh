@@ -25,6 +25,4 @@ while getopts ":a" opt; do
     esac
 done
 
-URL=$("$VG_BINARY" __env REDIS_URL)
-PASSWORD=$(echo "$URL" | cut -d':' -f3 | cut -d'@' -f1)
-stop_and_remove "vg-redis-$PASSWORD"
+stop_and_remove "$(vg __env REDIS_HOST)"

@@ -6,9 +6,9 @@
 #   interactive: true
 #   tty: true
 #   rm: true
-# defaults:
-#   VG_REDIS_VERSION: latest
-#   VG_DOCKER_NETWORK: host
+# environment:
+#   - VG_REDIS_VERSION=latest
+#   - VG_DOCKER_NETWORK=vg_redis
 # ---
 if [ -n "$1" ] ; then
     redis-cli -u "$REDIS_URL" $@

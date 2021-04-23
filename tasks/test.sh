@@ -2,27 +2,27 @@
 set -e
 
 printf "\nTEST: Creating a new database\n"
-"$VG_BINARY" redis new
+vg redis new
 
 printf "\nTEST: Pinging the database\n"
-"$VG_BINARY" redis ping
+vg redis ping
 
 printf "\nTEST: Creating some data\n"
-"$VG_BINARY" redis run incr mycounter
+vg redis run incr mycounter
 
 printf "\nTEST: Removing the database\n"
-"$VG_BINARY" redis rm
+vg redis rm
 
 printf "\nTEST: Trying to ping again (should fail)\n"
 set +e
-if "$VG_BINARY" redis ping; then
+if vg redis ping; then
     exit 1
 fi
 set -e
 
 printf "\nTEST: Creating two new databases\n"
-"$VG_BINARY" redis new
-"$VG_BINARY" redis new
+vg redis new
+vg redis new
 
 printf "\nTEST: Removing both running databases\n"
-"$VG_BINARY" redis rm -a
+vg redis rm -a

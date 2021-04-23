@@ -3,3 +3,4 @@
 .bundle
 .vagrant
 /redis.tar.gz
+.DS_Store

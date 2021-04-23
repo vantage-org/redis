@@ -6,10 +6,12 @@ random_string() {
 }
 
 PASSWORD=$(random_string)
-CONTAINER_NAME="vg-redis-$PASSWORD"
+NAME=$(random_string)
+CONTAINER_NAME="vg-redis-$NAME"
 
 PORT=${VG_REDIS_PORT:-6379}
-NETWORK="${VG_DOCKER_NETWORK:-bridge}"
+NETWORK="${VG_DOCKER_NETWORK:-vg_redis}"
+docker network create "$NETWORK" > /dev/null 2> /dev/null || true
 
 CONTAINER=$(docker run \
     --detach \
@@ -20,15 +22,12 @@ CONTAINER=$(docker run \
     --publish "$PORT" \
     "redis:${VG_REDIS_VERSION:-latest}" redis-server --requirepass "$PASSWORD")
 
-if [ -n "$VG_DOCKER_NETWORK" ]; then
-    HOST="$CONTAINER_NAME"
-else
-    HOST='localhost'
-    PORT=$(docker inspect --format '{{(index (index .NetworkSettings.Ports "6379/tcp") 0).HostPort}}' "$CONTAINER")
-fi
+DB="redis://default:$PASSWORD@$CONTAINER_NAME:$PORT"
 
-DB="redis://default:$PASSWORD@$HOST:$PORT"
-
-$VG_BINARY __env "REDIS_URL=$DB"
+vg __env "REDIS_URL=$DB"
+vg __env "REDIS_HOST=$CONTAINER_NAME"
+vg __env "REDIS_PORT=$PORT"
+vg __env "REDIS_USERNAME=default"
+vg __env "REDIS_PASSWORD=$PASSWORD"
 
 echo "$DB"
